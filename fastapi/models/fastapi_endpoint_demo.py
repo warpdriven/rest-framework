@@ -1,5 +1,6 @@
 # Copyright 2022 ACSONE SA/NV
 # License LGPL-3.0 or later (http://www.gnu.org/licenses/LGPL).
+import logging
 from enum import Enum
 from typing import List
 
@@ -12,6 +13,8 @@ from odoo.addons.base.models.res_partner import Partner
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel, Field
+
+_logger = logging.getLogger(__name__)
 
 from ..depends import (
     authenticated_partner,
@@ -180,6 +183,7 @@ def api_key_based_authenticated_partner_impl(
     """A dummy implementation that look for a user with the same login
     as the provided api key
     """
+    _logger.info(f'api_key: {api_key}')
     partner = (
         env["res.users"].sudo().search([("login", "=", api_key)], limit=1).partner_id
     )
