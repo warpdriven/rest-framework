@@ -1,20 +1,27 @@
 # Copyright 2022 ACSONE SA/NV
 # License LGPL-3.0 or later (http://www.gnu.org/licenses/LGPL).
-
+import sys
 import logging
 from functools import partial
 from itertools import chain
 from typing import Any, Awaitable, Callable, Dict, List, Tuple, Type, Union
-
 from a2wsgi import ASGIMiddleware
 from starlette.middleware import Middleware
-
 import odoo
+
 from odoo import _, api, exceptions, fields, models, tools
 
-from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request, Response
+fastapi_lib_path = odoo.tools.config.get('fastapi_lib_path')
+if fastapi_lib_path:
+    sys.path = [fastapi_lib_path] + sys.path
+    from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request, Response
+    sys.path = sys.path[1:]
+else:
+    from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request, Response
+
 
 from .. import depends, error_handlers
+
 
 _logger = logging.getLogger(__name__)
 
