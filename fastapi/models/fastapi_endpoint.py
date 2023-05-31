@@ -205,13 +205,17 @@ class FastapiEndpoint(models.Model):
         return record.user_id.id
 
     def _get_app(self) -> FastAPI:
+        print('====_get_app router 1==============', self._prepare_fastapi_app_params())
         app = FastAPI(**self._prepare_fastapi_app_params())
         for router in self._get_fastapi_routers():
+            print('====_get_app router 2==============', router, dir(router))
+
             app.include_router(prefix=self.root_path, router=router)
         app.dependency_overrides[depends.fastapi_endpoint_id] = partial(
             lambda a: a, self.id
         )
         for exception, handler in self._get_app_exception_handlers().items():
+            print('====_get_app router 3==============', exception, handler)
             app.add_exception_handler(exception, handler)
         return app
 

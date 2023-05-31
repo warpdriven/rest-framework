@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<odoo>
+
+    <record model="ir.ui.view" id="fastapi_endpoint_wd_form_view">
+        <field name="name">fastapi.endpoint.wd.form</field>
+        <field name="model">fastapi.endpoint</field>
+        <field name="inherit_id" ref="fastapi_endpoint_form_view"/>
+        <field name="arch" type="xml">
+            <span name="configuration" position="after">
+                <group name="wd_app_configuration" title="WD Configuration" attrs="{'invisible': [('app', '!=', 'wd')]}">
+                    <field name="wd_auth_method"/>
+                </group>
+            </span>
+        </field>
+    </record>
+
+</odoo>

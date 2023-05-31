@@ -17,19 +17,33 @@ class FastApiDispatcher(Dispatcher):
         return True
 
     def dispatch(self, endpoint, args):
+        print('----dispatch----------',   endpoint, args)
+
         # don't parse the httprequest let starlette parse the stream
         self.request.params = {}  # dict(self.request.get_http_params(), **args)
         environ = self._get_environ()
         root_path = "/" + environ["PATH_INFO"].split("/")[1]
+
+        print('----dispatch--2--------', root_path, environ["PATH_INFO"])
+
+
         # TODO store the env into contextvar to be used by the odoo_env
         # depends method
         fastapi_endpoint = self.request.env["fastapi.endpoint"].sudo()
         app = fastapi_endpoint.get_app(root_path)
         uid = fastapi_endpoint.get_uid(root_path)
         data = BytesIO()
+
+        print('----dispatch--3--------',app, uid, data, )
+        print('----dispatch--4--------', data.getvalue())
         with self._manage_odoo_env(uid):
+            print('----dispatch--4.1--------',  app(environ, self._make_response))
+
             for r in app(environ, self._make_response):
+                print('----dispatch--5--------', r)
                 data.write(r)
+
+            print('----dispatch--6--------', self.status)
             return self.request.make_response(
                 data.getvalue(), headers=self.headers, status=self.status
             )
@@ -38,6 +52,7 @@ class FastApiDispatcher(Dispatcher):
         pass
 
     def _make_response(self, status_mapping, headers_tuple, content):
+        print('>>>>>>>_make_response>>>>>>>>>>', status_mapping, headers_tuple, content)
         self.status = status_mapping[:3]
         self.headers = dict(headers_tuple)
 
@@ -52,8 +67,13 @@ class FastApiDispatcher(Dispatcher):
         # add authenticated_partner_id=False in the context
         # to ensure that the ir.rule defined for user's endpoint can be
         # evaluated even if not authenticated partner is set
+        print('>>>>>>>_manage_odoo_env>>>>>>>>>>', env.context)
+
         env = env(context=dict(env.context, authenticated_partner_id=False))
         accept_language = request.httprequest.headers.get("Accept-language")
+
+        print('>>>>>>>_manage_odoo_env 2>>>>>>>>>>', accept_language)
+
         context = env.context
         if accept_language:
             lang = (

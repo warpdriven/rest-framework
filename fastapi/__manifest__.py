@@ -14,10 +14,12 @@
     "data": [
         "security/res_groups.xml",
         "security/fastapi_endpoint.xml",
+
         "security/ir_rule+acl.xml",
         "views/fastapi_menu.xml",
         "views/fastapi_endpoint.xml",
         "views/fastapi_endpoint_demo.xml",
+        "views/fastapi_endpoint_wd.xml",
     ],
     "demo": ["demo/fastapi_endpoint_demo.xml"],
     "external_dependencies": {
