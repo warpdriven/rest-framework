@@ -34,11 +34,10 @@ class FastapiEndpointWD(models.Model):
         string="Authenciation method",
     )
 
-    @api.model
-    def get_fastapi_routers(self):
+    def _get_fastapi_routers(self):
         if self.app == "wd":
             return [wd_api_router]
-        return super().get_fastapi_routers()
+        return super()._get_fastapi_routers()
 
 
     @api.constrains("app", "wd_auth_method")
@@ -60,7 +59,6 @@ class FastapiEndpointWD(models.Model):
 
     def _get_app(self):
         app = super()._get_app()
-        print('=_get_app===', self.app)
         if self.app == "wd":
             # Here we add the overrides to the authenticated_partner_impl method
             # according to the authentication method configured on the demo app
@@ -100,6 +98,45 @@ wd_api_router = APIRouter()
 async def hello_word():
     """Hello World!"""
     return {"Hello": "World WD"}
+
+
+class SignupInfo(BaseModel):
+    code: str
+    error: str
+    message: str
+
+
+@wd_api_router.post("/signup")
+async def signup(login, name, password, lang='en_US', env=Depends(odoo_env)):
+    use_obj = env['res.users']
+    use_sudo_obj = use_obj.sudo()
+
+    res = use_sudo_obj.sudo().signup({
+        'login': login,
+        'name': name,
+        'password': password,
+        'lang': lang,
+    })
+
+    new_user = use_sudo_obj.search(
+        use_obj._get_login_domain(login), order=use_obj._get_login_order(), limit=1
+    )
+
+    print(new_user, res, type(res))
+
+    if new_user:
+        return SignupInfo(code='0', error='0', message='signup user ok')
+    else:
+        return SignupInfo(code='99', error='0', message='signup user fail')
+
+
+
+
+
+
+
+
+
 
 
 class PartnerInfo(BaseModel):
