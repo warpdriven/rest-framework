@@ -3,8 +3,10 @@
 import logging
 from enum import Enum
 from typing import List
+import odoo
 from odoo import _, api, fields, models
 from odoo.api import Environment
+from odoo.modules.registry import Registry
 from odoo.exceptions import AccessError, MissingError, UserError, ValidationError
 from odoo.addons.base.models.res_partner import Partner
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request, Response, status
@@ -100,7 +102,7 @@ async def hello_word():
     return {"Hello": "World WD"}
 
 
-class SignupInfo(BaseModel):
+class ResultInfo(BaseModel):
     code: str
     error: str
     message: str
@@ -122,19 +124,54 @@ async def signup(login, name, password, lang='en_US', env=Depends(odoo_env)):
         use_obj._get_login_domain(login), order=use_obj._get_login_order(), limit=1
     )
 
-    print(new_user, res, type(res))
-
     if new_user:
-        return SignupInfo(code='0', error='0', message='signup user ok')
+        return ResultInfo(code='0', error='0', message='signup user ok')
     else:
-        return SignupInfo(code='99', error='0', message='signup user fail')
+        return ResultInfo(code='99', error='99', message='signup user fail')
 
 
 
 
 
+@wd_api_router.post("/login")
+async def login(login=None, password=None, env=Depends(odoo_env)):
+    use_obj = env['res.users']
+    use_sudo_obj = use_obj.sudo()
+
+    # wsgienv = {
+    #     'interactive': True,
+    #     'base_location': request.httprequest.url_root.rstrip('/'),
+    #     'HTTP_HOST': request.httprequest.environ['HTTP_HOST'],
+    #     'REMOTE_ADDR': request.httprequest.environ['REMOTE_ADDR'],
+    # }
+    #registry = Registry(dbname)
+    #pre_uid = registry['res.users'].authenticate(env.cr.dbname, login, password, wsgienv)
+
+    _logger.info('====fastapi.wd.login=======%s %s' % (login, password))
+
+    try:
+        uid = use_obj._login(env.cr.dbname, login, password, user_agent_env=False)
+        _logger.info('====fastapi.wd.login=2======%s' % (uid))
+        return ResultInfo(code='0', error='0',  message='uid:%s login ok' % uid)
+    except Exception as e:
+        _logger.info('====fastapi.wd.login fail=======%s' % (e))
+        return ResultInfo(code='99', error='99', message=str(e))
 
 
+
+@wd_api_router.post("/reset_password")
+async def rest_passowrd(login, lang='en_US', env=Depends(odoo_env)):
+    use_obj = env['res.users']
+    use_sudo_obj = use_obj.sudo()
+    try:
+        # res = use_sudo_obj.browse(uid).change_password(old_password, new_password)
+        res = use_sudo_obj.sudo().reset_password(login)
+        _logger.info('====fastapi.wd.reset_password  fail=======%s' % (res))
+        message = 'Password reset instructions sent to your email'
+        return ResultInfo(code='0', error='0', message=message)
+    except Exception as e:
+        _logger.info('====fastapi.wd.reset_password  fail=======%s' % (e))
+        return ResultInfo(code='99', error='99', message=str(e))
 
 
 
